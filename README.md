@@ -63,6 +63,11 @@ argument to the paid tools.
 
 ## Tools
 
+Every tool returns `structuredContent` (JSON) alongside the text in `content`, and declares
+an `outputSchema` in `tools/list`. **Build against `structuredContent`, the tool names and
+the HTTP API** — those are the contract. The wording of the text is written for a model to
+read and may change without notice.
+
 | Tool | Key | What it does |
 |---|---|---|
 | `search_caps` | – | Find capabilities by what you want done, with price, success rate and latency |
