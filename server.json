@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.qumge/skills",
-  "title": "Qumge: Agent Apps & Skills",
-  "description": "App store for agents: find, install and pay per call for apps and skills. One key or OAuth.",
-  "version": "1.1.0",
+  "title": "Qumge: Agent Capabilities & Skills",
+  "description": "Find, call and pay per call: the capability layer for agents, plus skills. One key or OAuth.",
+  "version": "1.2.0",
   "remotes": [
     {
       "type": "streamable-http",

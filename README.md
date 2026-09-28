@@ -1,8 +1,9 @@
 # Qumge MCP
 
-**An app store for agents, over MCP.** Connect once and your agent can find and call paid
-apps (billed per call from your Qumge balance), search and install curated agent skills,
-see which LLMs one Qumge key reaches, and publish your own app — all in natural language.
+**The capability layer for agents, over MCP.** Connect once and your agent can find and call
+paid capabilities (billed per call from your Qumge balance), search and install curated agent
+skills, see which LLMs one Qumge key reaches, and publish your own capability — all in
+natural language.
 
 - Endpoint: `https://qumge.com/mcp`
 - Transport: Streamable HTTP (stateless — POST only, no sessions)
@@ -64,20 +65,26 @@ argument to the paid tools.
 
 | Tool | Key | What it does |
 |---|---|---|
-| `search_apps` | – | Find paid apps by what you want done, with price, success rate and latency |
-| `get_app` | – | An app's price book, routes, per-call maximum and error codes |
-| `call_app` | yes | Call an app; charged to your balance at the app's own price. 5xx is free |
-| `get_balance` | yes | Your balance, each app's spend against its monthly cap, and a top-up link |
+| `search_caps` | – | Find capabilities by what you want done, with price, success rate and latency |
+| `get_cap` | – | A capability's operations, input schemas, per-call maximum and error codes |
+| `call_cap` | yes | Call a capability; charged to your balance at its own price. 5xx is free |
+| `get_balance` | yes | Your balance, what each capability spent against its monthly limit, and a top-up link |
+| `get_earnings` | yes | Developer earnings: pending, payable, paid out, recent entries |
+| `request_payout` | yes | Ask for a payout of the payable balance, with fee and tax estimate |
 | `search_skills` | – | Search a curated catalog of popular agent skills (SKILL.md) |
 | `get_skill` | – | Fetch a skill's SKILL.md (and its other files) to install it |
 | `list_categories` | – | Skill categories and counts |
 | `list_models` | – | LLMs reachable with one Qumge key (tool-calling models only) |
 | `become_developer` | yes | Open a developer account — immediate, no review |
-| `list_apps` | yes | Your own apps and their status |
-| `publish_app` | yes | Publish your HTTPS service as a draft app with its price book |
-| `test_app` | yes | Signed/forged ping plus an end-to-end call of each route |
-| `submit_app_review` | yes | Take an app live — immediately |
-| `app_status` | yes | An app's review checklist and state |
+| `list_caps` | yes | Your own capabilities and their status |
+| `publish_cap` | yes | Publish your HTTPS service as a draft capability with its price book |
+| `test_cap` | yes | Signed/forged ping plus an end-to-end call of each operation |
+| `submit_cap` | yes | Take a capability live — immediately |
+| `cap_status` | yes | A capability's publishing checklist and state |
+
+Older clients may still call the pre-rename names (`search_apps`, `get_app`, `call_app`,
+`publish_app`, `test_app`, `submit_app_review`, `app_status`, `list_apps`): the server keeps
+dispatching them — they are just no longer advertised here.
 
 ## Try
 
@@ -86,18 +93,26 @@ argument to the paid tools.
 - "What's my Qumge balance?"
 - "Publish my API at https://api.example.com on Qumge and take it live"
 
+## Already have a remote MCP server?
+
+You do not have to expose a REST API. `publish_cap` takes `mcp_url` instead of `base_url`:
+Qumge calls `tools/list`, and every tool you price with `mcp_tools` becomes one operation
+(the tool's own description and `inputSchema` are what agents read). The domain must be one
+you have verified in your profile, and unpriced tools are not published. Calls go out as
+`tools/call`, billed per successful (2xx) call at your price.
+
 ## Pricing
 
-Pay-as-you-go: top up your balance, then pay per call (apps) or per token (models).
-Apps cost the same through Qumge as calling them directly; a failed call costs nothing.
-Each app has a monthly cap you control.
+Pay-as-you-go: top up your balance, then pay per call (capabilities) or per token (models).
+Capabilities cost the same through Qumge as calling them directly; a failed call costs
+nothing. Each capability has a monthly limit you control.
 
 ## See also
 
 - [qumg-skill](https://github.com/xnjiang/qumg-skill) — the matching skill, which teaches
   an agent when and how to use these tools (and falls back to HTTP without MCP)
 - https://qumge.com/llms.txt — the site index for agents
-- https://qumge.com/v1/apps/openapi.json — the app catalog as OpenAPI
+- https://qumge.com/v1/caps/openapi.json — the capability catalogue as OpenAPI
 
 ## License
 
