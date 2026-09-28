@@ -71,6 +71,7 @@ argument to the paid tools.
 | `get_balance` | yes | Your balance, what each capability spent against its monthly limit, and a top-up link |
 | `get_earnings` | yes | Developer earnings: pending, payable, paid out, recent entries |
 | `request_payout` | yes | Ask for a payout of the payable balance, with fee and tax estimate |
+| `list_wanted` | – | What agents searched for and found nothing — the demand side of the store |
 | `search_skills` | – | Search a curated catalog of popular agent skills (SKILL.md) |
 | `get_skill` | – | Fetch a skill's SKILL.md (and its other files) to install it |
 | `list_categories` | – | Skill categories and counts |
