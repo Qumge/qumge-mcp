@@ -105,7 +105,9 @@ You do not have to expose a REST API. `publish_cap` takes `mcp_url` instead of `
 Qumge calls `tools/list`, and every tool you price with `mcp_tools` becomes one operation
 (the tool's own description and `inputSchema` are what agents read). The domain must be one
 you have verified in your profile, and unpriced tools are not published. Calls go out as
-`tools/call`, billed per successful (2xx) call at your price.
+`tools/call`, billed on the HTTP status: every 2xx response is charged at your price — including
+a tool result with `isError: true`. Non-2xx responses and timeouts are free, so return a non-2xx
+status for failures you don't want billed.
 
 ## Pricing
 
