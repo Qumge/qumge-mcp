@@ -83,6 +83,7 @@ read and may change without notice.
 | `list_models` | – | LLMs reachable with one Qumge key (tool-calling models only) |
 | `become_developer` | yes | Open a developer account — immediate, no review |
 | `list_caps` | yes | Your own capabilities and their status |
+| `verify_domain` | yes | Prove you own your service's domain: get the line to deploy, then check it |
 | `publish_cap` | yes | Publish your HTTPS service as a draft capability with its price book |
 | `test_cap` | yes | Signed/forged ping plus an end-to-end call of each operation |
 | `submit_cap` | yes | Take a capability live — immediately |
