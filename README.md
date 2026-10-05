@@ -118,7 +118,7 @@ nothing. Each capability has a monthly limit you control.
 
 ## See also
 
-- [qumg-skill](https://github.com/xnjiang/qumg-skill) — the matching skill, which teaches
+- [qumge-skill](https://github.com/Qumge/qumge-skill) — the matching skill, which teaches
   an agent when and how to use these tools (and falls back to HTTP without MCP)
 - https://qumge.com/llms.txt — the site index for agents
 - https://qumge.com/v1/caps/openapi.json — the capability catalogue as OpenAPI
