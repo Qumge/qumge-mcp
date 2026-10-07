@@ -70,8 +70,8 @@ read and may change without notice.
 
 | Tool | Key | What it does |
 |---|---|---|
-| `search_caps` | – | Find capabilities by what you want done, with price, success rate and latency |
-| `get_cap` | – | A capability's operations, input schemas, per-call maximum and error codes |
+| `search_caps` | – | Find capabilities by what you want done, with price, success rate, latency and any free calls |
+| `get_cap` | – | A capability's operations, input schemas, per-call maximum, free calls and error codes |
 | `call_cap` | yes | Call a capability; charged to your balance at its own price. 5xx is free |
 | `get_balance` | yes | Your balance, what each capability spent against its monthly limit, and a top-up link |
 | `get_earnings` | yes | Developer earnings: pending, payable, paid out, recent entries |
@@ -109,6 +109,20 @@ you have verified in your profile, and unpriced tools are not published. Calls g
 `tools/call`, billed on the HTTP status: every 2xx response is charged at your price — including
 a tool result with `isError: true`. Non-2xx responses and timeouts are free, so return a non-2xx
 status for failures you don't want billed.
+
+**Or let a file describe it.** Put a `qumge.json` at `https://<your-domain>/.well-known/qumge.json`
+(spec: https://qumge.com/docs/caps/manifest, schema: https://qumge.com/schemas/qumge-manifest/v1.json) and call
+`publish_cap` with `manifest_url`. Prices in the file are suggestions — they are confirmed on Qumge before they
+take effect. With several capabilities in one file, pass `slug` to pick one.
+
+## Free calls
+
+A developer can give each billed operation a few free calls (`free_calls` in `qumge.json`, or set on
+Qumge). They are for users who have topped up at least once, are counted per user, capability and
+operation, and only a successful call uses one up. `search_caps` returns them in
+`structuredContent.results[].free_calls` — an object mapping operation name to the number of free
+calls (`{}` when there are none) — and `get_cap` in `structuredContent.operations[].free_calls`
+(an integer, `0` when there are none).
 
 ## Pricing
 
