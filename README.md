@@ -129,7 +129,7 @@ calls (`{}` when there are none) — and `get_cap` in `structuredContent.operati
 ## Pricing
 
 Pay-as-you-go: top up your balance, then pay per call (capabilities) or per token (models).
-Each capability's developer sets its price; a failed call (5xx or timeout) costs
+Each capability's developer sets its price; a failed call (non-2xx response or timeout) costs
 nothing. Each capability has a monthly limit you control.
 
 ## See also
