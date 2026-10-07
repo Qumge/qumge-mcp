@@ -104,8 +104,10 @@ dispatching them — they are just no longer advertised here.
 
 You do not have to expose a REST API. `publish_cap` takes `mcp_url` instead of `base_url`:
 Qumge calls `tools/list`, and every tool you price with `mcp_tools` becomes one operation
-(the tool's own description and `inputSchema` are what agents read). The domain must be one
-you have verified in your profile, and unpriced tools are not published. Calls go out as
+(the tool's own description and `inputSchema` are what agents read). The domain does not need
+to be verified to go live, but your earnings from the capability stay frozen until
+`verify_domain` passes for it; a domain another developer has verified can't be used. Unpriced
+tools are not published. Calls go out as
 `tools/call`, billed on the HTTP status: every 2xx response is charged at your price — including
 a tool result with `isError: true`. Non-2xx responses and timeouts are free, so return a non-2xx
 status for failures you don't want billed.
@@ -127,7 +129,7 @@ calls (`{}` when there are none) — and `get_cap` in `structuredContent.operati
 ## Pricing
 
 Pay-as-you-go: top up your balance, then pay per call (capabilities) or per token (models).
-Capabilities cost the same through Qumge as calling them directly; a failed call costs
+Each capability's developer sets its price; a failed call (5xx or timeout) costs
 nothing. Each capability has a monthly limit you control.
 
 ## See also
