@@ -117,7 +117,7 @@ a tool result with `isError: true`. Non-2xx responses and timeouts are free, so 
 status for failures you don't want billed.
 
 **Or let a file describe it.** Put a `qumge.json` at `https://<your-domain>/.well-known/qumge.json`
-(spec: https://qumge.com/docs/caps/manifest, schema: https://qumge.com/schemas/qumge-manifest/v1.json) and call
+(spec: https://qumge.com/en/docs/caps/manifest, schema: https://qumge.com/schemas/qumge-manifest/v1.json) and call
 `publish_cap` with `manifest_url`. Prices in the file are suggestions — they are confirmed on Qumge before they
 take effect. With several capabilities in one file, pass `slug` to pick one.
 
