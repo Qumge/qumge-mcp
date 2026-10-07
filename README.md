@@ -68,10 +68,14 @@ an `outputSchema` in `tools/list`. **Build against `structuredContent`, the tool
 the HTTP API** — those are the contract. The wording of the text is written for a model to
 read and may change without notice.
 
+The full reference — every tool, which ones need a key, the output contract and protocol-level
+errors — is at https://qumge.com/en/docs/mcp (its tool table is generated from the server).
+`get_cap` works without a key; with one it also reports your monthly limit for that capability.
+
 | Tool | Key | What it does |
 |---|---|---|
 | `search_caps` | – | Find capabilities by what you want done, with price, success rate, latency and any free calls |
-| `get_cap` | – | A capability's operations, input schemas, per-call maximum, free calls and error codes |
+| `get_cap` | optional | A capability's operations, input schemas, per-call maximum, free calls and error codes |
 | `call_cap` | yes | Call a capability; charged to your balance at its own price. 5xx is free |
 | `get_balance` | yes | Your balance, what each capability spent against its monthly limit, and a top-up link |
 | `get_earnings` | yes | Developer earnings: pending, payable, paid out, recent entries |
