@@ -77,6 +77,7 @@ errors — is at https://qumge.com/en/docs/mcp (its tool table is generated from
 | `search_caps` | – | Find capabilities by what you want done, with price, success rate, latency and any free calls |
 | `get_cap` | optional | A capability's operations, input schemas, per-call maximum, free calls and error codes |
 | `call_cap` | yes | Call a capability; charged to your balance at its own price. 5xx is free |
+| `get_cap_job` | yes | Read a managed capability job for free — progress, result and receipt; `refresh_result` renews a supported result URL |
 | `get_balance` | yes | Your balance, what each capability spent against its monthly limit, and a top-up link |
 | `get_earnings` | yes | Developer earnings: pending, payable, paid out, recent entries |
 | `request_payout` | yes | Ask for a payout of the payable balance, with fee and tax estimate |
@@ -92,6 +93,8 @@ errors — is at https://qumge.com/en/docs/mcp (its tool table is generated from
 | `test_cap` | yes | Signed/forged ping plus an end-to-end call of each operation |
 | `submit_cap` | yes | Take a capability live — immediately |
 | `cap_status` | yes | A capability's publishing checklist and state |
+| `delist_cap` | yes | Take your own capability down: calls stop at once (404), its page stays up marked delisted |
+| `relist_cap` | yes | Put a delisted capability back — no new review; a changed address is retested first |
 
 Older clients may still call the pre-rename names (`search_apps`, `get_app`, `call_app`,
 `publish_app`, `test_app`, `submit_app_review`, `app_status`, `list_apps`): the server keeps
