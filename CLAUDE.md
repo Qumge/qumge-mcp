@@ -1,0 +1,3 @@
+# qumg-mcp
+
+@AGENTS.md
