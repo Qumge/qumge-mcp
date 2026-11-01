@@ -1,5 +1,7 @@
 # Qumge MCP
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 **The hosted platform tools shared by two Qumge skills.** Agents can discover and call
 complete-result capabilities, read catalog skills/model metadata, and register or manage a
 developer's capabilities through https://qumge.com/mcp.
