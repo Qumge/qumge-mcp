@@ -17,4 +17,4 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Compare README against the live MCP tool list
-        run: ./scripts/check-tools.sh
+        run: bash scripts/check-tools.sh

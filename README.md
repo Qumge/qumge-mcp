@@ -1,16 +1,35 @@
 # Qumge MCP
 
-**The capability layer for agents, over MCP.** Connect once and your agent can find and call
-paid capabilities (billed per call from your Qumge balance), search and install curated agent
-skills, see which LLMs one Qumge key reaches, and publish your own capability — all in
-natural language.
+**The hosted platform tools shared by two Qumge skills.** Agents can discover and call
+complete-result capabilities, read catalog skills/model metadata, and register or manage a
+developer's capabilities through https://qumge.com/mcp.
+
+This repository contains connection documentation and registry metadata. The server runs
+at qumge.com; adding this connection does not install a local runtime, inspect a developer's
+filesystem or deploy their application.
 
 - Endpoint: `https://qumge.com/mcp`
-- Transport: Streamable HTTP (stateless — POST only, no sessions)
-- Registry: [`com.qumge/skills`](https://registry.modelcontextprotocol.io/v0/servers?search=qumge)
+- Transport: Streamable HTTP, stateless POST
+- Registry: `com.qumge/skills` (retained for existing clients)
 
-This is a **hosted** server: there is nothing to install or run locally. This repo holds
-its documentation and registry metadata; the server itself runs at qumge.com.
+## Skills and responsibilities
+
+| Entry | Audience | Responsibility |
+|---|---|---|
+| **qumge** | Buyers/model users | Find and use Caps, install catalog skills, connect model clients and check spending balance. |
+| **qumge-publish** | Developers | Use the coding Agent's local tools to inspect/adapt/test/deploy a project, then call this MCP to register, validate, publish and manage its Cap. |
+| **Qumge MCP** | Both | Operate the hosted platform. The same endpoint/account works with either skill. |
+
+Both skills live in [Qumge/qumge-skill](https://github.com/Qumge/qumge-skill). The original
+consumer installation is unchanged. Install the self-contained publisher with:
+
+```bash
+npx skills add Qumge/qumge-skill --full-depth --skill qumge-publish
+```
+
+Full-depth discovery is necessary when the root SKILL.md would otherwise hide nested skills.
+The publisher includes offline preflight and HTTP/auth fallback; the consumer skill is optional.
+There is no second MCP server, repository or automatic cloud hosting of arbitrary CLIs.
 
 ## Connect
 
@@ -63,88 +82,92 @@ argument to the paid tools.
 
 ## Tools
 
-Every tool returns `structuredContent` (JSON) alongside the text in `content`, and declares
-an `outputSchema` in `tools/list`. **Build against `structuredContent`, the tool names and
-the HTTP API** — those are the contract. The wording of the text is written for a model to
-read and may change without notice.
-
-The full reference — every tool, which ones need a key, the output contract and protocol-level
-errors — is at https://qumge.com/en/docs/mcp (its tool table is generated from the server).
-`get_cap` works without a key; with one it also reports your monthly limit for that capability.
+Every tool advertises its current input/output schemas through tools/list. Prefer
+structuredContent (JSON); content text is display copy. Handle protocol error and result.isError.
+The complete maintained reference is https://qumge.com/en/docs/mcp.
 
 | Tool | Key | What it does |
 |---|---|---|
-| `search_caps` | – | Find capabilities by what you want done, with price, success rate, latency and any free calls |
-| `get_cap` | optional | A capability's operations, input schemas, per-call maximum, free calls and error codes |
-| `call_cap` | yes | Call a capability; charged to your balance at its own price. 5xx is free |
-| `get_cap_job` | yes | Read a managed capability job for free — progress, result and receipt; `refresh_result` renews a supported result URL |
-| `get_balance` | yes | Your balance, what each capability spent against its monthly limit, and a top-up link |
-| `get_earnings` | yes | Developer earnings: pending, payable, paid out, recent entries |
-| `request_payout` | yes | Ask for a payout of the payable balance, with fee and tax estimate |
-| `list_wanted` | – | What agents searched for and found nothing — the demand side of the store |
-| `search_skills` | – | Search a curated catalog of popular agent skills (SKILL.md) |
-| `get_skill` | – | Fetch a skill's SKILL.md (and its other files) to install it |
+| `search_caps` | – | Find complete-result capabilities by task and published price |
+| `get_cap` | optional | Read effective/pending contracts, operations, limits and current confirmation requirements |
+| `call_cap` | yes | Invoke an operation; use stable managed idempotency and accepted contract digest when required |
+| `get_cap_job` | yes | Free cached job progress, result and receipt; explicit refresh_result for supported URL renewal |
+| `get_balance` | yes | Spending balance, monthly limits and top-up link |
+| `search_skills` | – | Search the curated skill catalog |
+| `get_skill` | – | Read SKILL.md and optional supporting files for the Agent to install |
 | `list_categories` | – | Skill categories and counts |
-| `list_models` | – | LLMs reachable with one Qumge key (tool-calling models only) |
-| `become_developer` | yes | Open a developer account — immediate, no review |
-| `list_caps` | yes | Your own capabilities and their status |
-| `verify_domain` | yes | Prove you own your service's domain: get the line to deploy, then check it |
-| `publish_cap` | yes | Publish your HTTPS service as a draft capability with its price book |
-| `test_cap` | yes | Signed/forged ping plus an end-to-end call of each operation |
-| `submit_cap` | yes | Take a capability live — immediately |
-| `cap_status` | yes | A capability's publishing checklist and state |
-| `delist_cap` | yes | Take your own capability down: calls stop at once (404), its page stays up marked delisted |
-| `relist_cap` | yes | Put a delisted capability back — no new review; a changed address is retested first |
+| `list_models` | – | Discover reachable tool-calling models; inference uses the compatible model API |
+| `list_wanted` | – | Public capability-demand evidence |
+| `become_developer` | yes | Open the owner's developer account |
+| `list_caps` | yes | Read the owner's capability states |
+| `verify_domain` | yes | Verify the service domain before releasing frozen developer earnings |
+| `publish_cap` | yes | Create/update a draft from a deployed manifest; does not deploy or take it live |
+| `test_cap` | yes | Validate the applicable connection/fixture contract, with exact candidate price_version when requested |
+| `submit_cap` | yes | Make a tested draft live within the owner's publication scope |
+| `cap_status` | yes | Read the publishing checklist and effective/pending state |
+| `migrate_cap_contract` | yes | Owner-scoped prepare/test/activate/status/repair_review for existing contracts; inspect its current schema |
+| `delist_cap` | yes | Stop new calls immediately; preserve the public page marked delisted |
+| `relist_cap` | yes | Restore a delisted Cap; changed addresses are retested |
+| `get_earnings` | yes | Developer pending/payable/paid earnings |
+| `request_payout` | yes | Request payout of Cap income within the owner's authority |
 
-Older clients may still call the pre-rename names (`search_apps`, `get_app`, `call_app`,
-`publish_app`, `test_app`, `submit_app_review`, `app_status`, `list_apps`): the server keeps
-dispatching them — they are just no longer advertised here.
+Pre-rename aliases still dispatch for existing clients, including search_apps/get_app/call_app,
+publish_app/test_app/submit_app_review/app_status/list_apps. New clients use Cap names.
 
-## Try
+## Publishing: the current default
 
-- "Find me a skill that extracts tables from PDFs and install it"
-- "What models can I use with my Qumge key?"
-- "What's my Qumge balance?"
-- "Publish my API at https://api.example.com on Qumge and take it live"
+Use a managed **manifest v2** describing one clear input and one complete usable result:
+https://qumge.com/schemas/qumge-manifest/v2.json. Keep provider credentials in a private
+named connection; they never belong in public JSON. Serve the actual manifest over HTTPS,
+then call publish_cap(manifest_url:, slug:). A suggested manifest price is not owner approval.
 
-## Already have a remote MCP server?
+The publisher Agent implements and deploys only the missing provider hooks using the
+project's existing framework, jobs, workers and private storage. Qumge supplies discovery,
+invocation, buyer orders and settlement, not the provider's business execution environment.
 
-You do not have to expose a REST API. `publish_cap` takes `mcp_url` instead of `base_url`:
-Qumge calls `tools/list`, and every tool you price with `mcp_tools` becomes one operation
-(the tool's own description and `inputSchema` are what agents read). The domain does not need
-to be verified to go live, but your earnings from the capability stay frozen until
-`verify_domain` passes for it; a domain another developer has verified can't be used. Unpriced
-tools are not published. Calls go out as
-`tools/call`, billed on the HTTP status: every 2xx response is charged at your price — including
-a tool result with `isError: true`. Non-2xx responses and timeouts are free, so return a non-2xx
-status for failures you don't want billed.
+Run local checks, then test_cap, distinguish connection/fixture/real_delivery and read the
+version tested. Fixtures do not establish business quality or real paid delivery. Call
+submit_cap only within existing owner publication scope; do not ask again for an approval
+already given. If the price/publication scope is missing, present the ready draft and ask
+only for that decision. Read back the actual live/effective state afterward.
 
-**Or let a file describe it.** Put a `qumge.json` at `https://<your-domain>/.well-known/qumge.json`
-(spec: https://qumge.com/en/docs/caps/manifest, schema: https://qumge.com/schemas/qumge-manifest/v1.json) and call
-`publish_cap` with `manifest_url`. Prices in the file are suggestions — they are confirmed on Qumge before they
-take effect. With several capabilities in one file, pass `slug` to pick one.
+Domain verification is required to release earnings, not merely to list a Cap. A domain
+verified by another developer cannot be claimed. Keys, paid real tests, deployment and
+publication are separate authorization scopes.
 
-## Free calls
+### Existing API or remote MCP
 
-A developer can give each billed operation a few free calls (`free_calls` in `qumge.json`, or set on
-Qumge). They are for users who have topped up at least once, are counted per user, capability and
-operation, and only a successful call uses one up. `search_caps` returns them in
-`structuredContent.results[].free_calls` — an object mapping operation name to the number of free
-calls (`{}` when there are none) — and `get_cap` in `structuredContent.operations[].free_calls`
-(an integer, `0` when there are none).
+A complete-result API/MCP operation can be reused with supported managed execution mapping.
+If several partial operations are needed, compose them privately on the provider server.
+For a CLI/internal function, add thin HTTPS hooks and choose a real deployment environment.
 
-## Pricing
+Advanced legacy manual HTTP price books and mcp_url/mcp_tools registration remain supported
+for existing integrations. Read tools/list and current docs rather than copying old v1
+examples into a new managed integration. For native MCP failures, isError/JSON-RPC tool
+errors are not a successful billed result. Managed settlement requires the complete successful
+result and output schema, not merely a 2xx or an accepted/queued job ID.
 
-Pay-as-you-go: top up your balance, then pay per call (capabilities) or per token (models).
-Each capability's developer sets its price; a failed call (non-2xx response or timeout) costs
-nothing. Each capability has a monthly limit you control.
+## Calling and paying
 
-## See also
+The buyer uses the current get_cap deliverable, price and spending authority. If
+contract_state.confirmation_required is true, confirm that changed result before passing
+its current contract_digest as accepted_contract_digest. Old permission is not acceptance
+of a different deliverable. For retrying the same managed operation/input, reuse the same
+idempotency_key; poll the returned platform job ID instead of creating another generation.
 
-- [qumge-skill](https://github.com/Qumge/qumge-skill) — the matching skill, which teaches
-  an agent when and how to use these tools (and falls back to HTTP without MCP)
-- https://qumge.com/llms.txt — the site index for agents
-- https://qumge.com/v1/caps/openapi.json — the capability catalogue as OpenAPI
+Qumge is pay-as-you-go: buyers top up first, then pay per complete managed result or model
+usage. Some Caps offer free calls to previously topped-up users; a successful call consumes
+a free call. Availability/price/free-call limits come from the current catalog and contract,
+not the README. Do not promise free trial credits or lower-than-direct provider pricing.
+A 402 means balance/monthly limit; resolve it rather than retrying.
+
+## Sources
+
+- Skills: https://github.com/Qumge/qumge-skill
+- Current managed contract: https://qumge.com/en/docs/caps/managed
+- Manifest: https://qumge.com/en/docs/caps/manifest
+- Agent index: https://qumge.com/llms.txt
+- OpenAPI catalog: https://qumge.com/v1/caps/openapi.json
 
 ## License
 
