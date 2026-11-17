@@ -35,7 +35,8 @@ There is no second MCP server, repository or automatic cloud hosting of arbitrar
 
 ## Connect
 
-Searching works without a key. For anything that spends your balance, add your key
+Searching works without a key. Account tools need your key, including free quotes, job reads
+and balance checks as well as spending. Add your key
 (`sk_qumge_…`, from https://qumge.com/en/gateway/api_keys) — or leave it out and let the
 agent open a login link for you to approve when it first needs one.
 
@@ -76,11 +77,11 @@ claude mcp add --transport http qumge https://qumge.com/mcp \
 ```
 
 **Claude.ai / Claude Desktop / ChatGPT connectors** — add a custom connector with the URL
-`https://qumge.com/mcp`. These clients can't set headers, so paid tools sign you in with
+`https://qumge.com/mcp`. These clients can't set headers, so authenticated tools sign you in with
 OAuth the first time; the key it creates shows up under API Keys as "<client> via OAuth".
 
 **Clients that can't set headers or do OAuth** — pass `qumge_key: "sk_qumge_…"` as an
-argument to the paid tools.
+argument to authenticated tools.
 
 ## Tools
 
@@ -92,7 +93,8 @@ The complete maintained reference is https://qumge.com/en/docs/mcp.
 |---|---|---|
 | `search_caps` | – | Find complete-result capabilities by task and published price |
 | `get_cap` | optional | Read effective/pending contracts, operations, limits and current confirmation requirements |
-| `call_cap` | yes | Invoke an operation; use stable managed idempotency and accepted contract digest when required |
+| `quote_cap` | yes | Free binding quote for complete metered input; supports capped_actual limits and an optional budget |
+| `call_cap` | yes | Invoke an operation; metered calls require quote_id and stable idempotency_key; accept changed contracts when required |
 | `get_cap_job` | yes | Free cached job progress, result and receipt; explicit refresh_result for supported URL renewal |
 | `get_balance` | yes | Spending balance, monthly limits and top-up link |
 | `search_skills` | – | Search the curated skill catalog |
@@ -157,6 +159,27 @@ its current contract_digest as accepted_contract_digest. Old permission is not a
 of a different deliverable. For retrying the same managed operation/input, reuse the same
 idempotency_key; poll the returned platform job ID instead of creating another generation.
 
+For a metered operation (`quote_required: true`), call `quote_cap` with its `slug`,
+`operation` and complete `input` before spending. It requires the buyer's key but is free:
+no provider work, fund reservation, charge or free-call consumption. For `capped_actual`,
+include `limits` for every output-metered line (positive maximum quantities within the Cap's
+limits). Optional `max_charge_micro_usd` rejects a quote above your budget. Read
+`amount_micro_usd`, `kind` (`exact` or `ceiling`), `resolved_dimensions` and `expires_at`,
+then confirm the amount within the user's spending authority. One USD is 1,000,000 micro-USD.
+
+Pass the returned `quote_id` to `call_cap` with the identical input and a saved stable
+`idempotency_key`. The quote is bound to the buyer, Cap, operation and input for 10 minutes;
+one quote can create only one order. The order reserves the quoted amount; its final job
+receipt records the settled charge. Fixed-price and legacy calls keep their existing flow
+and do not universally require a quote.
+
+If a call's outcome is uncertain, read its `get_cap_job` for free, or replay the original
+call with the same quote, input and key to recover the original order, even after expiry.
+Do this before requesting a replacement quote. If no order was created and the unused quote
+returns `quote_expired` or `quote_contract_changed`, re-read `get_cap`, obtain a fresh quote
+and check the current amount/authority before calling. `quote_already_used` is a reason to
+recover the original order, not to switch keys. Never start a duplicate generation.
+
 Qumge is pay-as-you-go: buyers top up first, then pay per complete managed result or model
 usage. Some Caps offer free calls to previously topped-up users; a successful call consumes
 a free call. Availability/price/free-call limits come from the current catalog and contract,
@@ -170,6 +193,12 @@ A 402 means balance/monthly limit; resolve it rather than retrying.
 - Manifest: https://qumge.com/en/docs/caps/manifest
 - Agent index: https://qumge.com/llms.txt
 - OpenAPI catalog: https://qumge.com/v1/caps/openapi.json
+
+## Maintenance checks
+
+Run `bash scripts/check-tools.sh` for metadata-only `tools/list` verification of both
+language tables, metered argument schemas and flow guidance. For offline checks, set
+`QUMGE_TOOLS_FILE` to a previously captured tools/list JSON response. No paid tool is invoked.
 
 ## License
 

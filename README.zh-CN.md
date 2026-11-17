@@ -36,7 +36,7 @@ Skill 的说明、提问和面向用户的报告跟随用户语言。工具名�
 
 ## 连接
 
-搜索无需密钥。消耗余额的操作需要密钥（`sk_qumge_…`，从 https://qumge.com/en/gateway/api_keys 获取）；也可以暂不提供，在首次需要时由 Agent 打开登录链接供你确认。
+搜索无需密钥。账户工具需要密钥，包括免费报价、任务读取、余额查询和消费操作。可从 https://qumge.com/en/gateway/api_keys 获取 `sk_qumge_…` 密钥；也可以暂不提供，在首次需要时由 Agent 打开登录链接供你确认。
 
 **Claude Code**
 
@@ -74,9 +74,9 @@ claude mcp add --transport http qumge https://qumge.com/mcp \
 }
 ```
 
-**Claude.ai / Claude Desktop / ChatGPT 连接器**：添加自定义连接器，地址为 `https://qumge.com/mcp`。这些客户端不能设置请求头，付费工具首次通过 OAuth 登录；创建的密钥会在 API Keys 中显示为“<client> via OAuth”。
+**Claude.ai / Claude Desktop / ChatGPT 连接器**：添加自定义连接器，地址为 `https://qumge.com/mcp`。这些客户端不能设置请求头，需要认证的工具首次通过 OAuth 登录；创建的密钥会在 API Keys 中显示为“<client> via OAuth”。
 
-**不能设置请求头或使用 OAuth 的客户端**：在付费工具参数中传入 `qumge_key: "sk_qumge_…"`。
+**不能设置请求头或使用 OAuth 的客户端**：在需要认证的工具参数中传入 `qumge_key: "sk_qumge_…"`。
 
 ## 工具
 
@@ -86,7 +86,8 @@ claude mcp add --transport http qumge https://qumge.com/mcp \
 |---|---|---|
 | `search_caps` | 无需 | 按任务与公开价格查找交付完整结果的能力 |
 | `get_cap` | 可选 | 读取生效或待生效合同、操作、限制和确认要求 |
-| `call_cap` | 需要 | 调用操作；按要求使用稳定幂等键与已接受合同摘要 |
+| `quote_cap` | 需要 | 免费获取完整计量输入的绑定报价；支持 capped_actual 限量和可选预算 |
+| `call_cap` | 需要 | 调用操作；计量调用须传 quote_id 和稳定 idempotency_key；按要求接受变更后的合同 |
 | `get_cap_job` | 需要 | 免费读取缓存任务进度、结果与回执；支持时显式使用 refresh_result 更新链接 |
 | `get_balance` | 需要 | 消费余额、月度限制与充值链接 |
 | `search_skills` | 无需 | 搜索精选 skill 目录 |
@@ -134,6 +135,12 @@ https://qumge.com/schemas/qumge-manifest/v2.json。
 
 重试同一托管操作和输入时，复用同一个 `idempotency_key`；轮询返回的平台任务 ID，避免创建重复生成。
 
+对于计量操作（`quote_required: true`），消费前先用 `slug`、`operation` 和完整 `input` 调用 `quote_cap`。报价需要买家的密钥，但不启动提供方工作、不冻结资金、不扣款，也不消耗免费次数。`capped_actual` 还需为每个输出计量行传入 `limits`，即不超过 Cap 限制的正整数最大数量。可选 `max_charge_micro_usd` 会拒绝超过预算的报价。读取 `amount_micro_usd`、`kind`（`exact` 为确切金额，`ceiling` 为上限）、`resolved_dimensions` 和 `expires_at`，在消费授权范围内确认金额；1 美元等于 1,000,000 micro-USD。
+
+将返回的 `quote_id` 与完全相同的输入、保存好的稳定 `idempotency_key` 一起传给 `call_cap`。报价绑定买家、Cap、操作和输入，有效期为 10 分钟；一个报价只能创建一个订单。订单按报价金额冻结资金，最终任务回执记录实际结算金额。固定价和旧版调用继续沿用原有流程，无需一律报价。
+
+调用结果不确定时，先用 `get_cap_job` 免费读取已有任务，或使用原报价、输入和幂等键重放调用，恢复原订单；报价过期后也可恢复。完成核对后再决定是否需要新报价。如果没有创建订单，且未使用的报价返回 `quote_expired` 或 `quote_contract_changed`，重新读取 `get_cap`、获取新报价，并核对金额与授权再调用。`quote_already_used` 应恢复原订单，不能换键创建重复生成。
+
 Qumge 按量付费：先充值，再按完整托管结果或模型用量扣费。部分 Cap 为曾充值用户提供免费调用次数，成功调用会消耗一次。可用性、价格和免费次数以当前目录和合同为准；不承诺试用赠金或比直连提供方更低的价格。402 表示余额或月度限制问题，先解决原因再继续。
 
 ## 常见问题
@@ -153,6 +160,10 @@ Qumge 按量付费：先充值，再按完整托管结果或模型用量扣费�
 - Manifest：https://qumge.com/en/docs/caps/manifest
 - Agent 索引：https://qumge.com/llms.txt
 - OpenAPI 目录：https://qumge.com/v1/caps/openapi.json
+
+## 维护检查
+
+运行 `bash scripts/check-tools.sh`，仅通过 `tools/list` 元数据检查中英文表格、计量参数 schema 和流程说明。离线检查可将 `QUMGE_TOOLS_FILE` 设为已保存的 tools/list JSON 响应；不会调用付费工具。
 
 ## 许可
 
